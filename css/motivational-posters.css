@@ -1,0 +1,82 @@
+body {
+  background-color: #333;
+  color: #e0e0e0;
+  font-family: serif;
+  font-size: 20px;
+  margin: 0 auto;
+  min-height: 100%;
+  min-width: 300px;
+  max-width: 1280px;
+  text-align: center;
+}
+
+.poster {
+  background-color: #000;
+  box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.2), 0 7px 10px 0 rgba(0, 0, 0, 0.1);
+  margin: 2%;
+  padding: 3% 3% 1%;
+}
+
+.imagebox:before {
+  border: 4px solid #000;
+  bottom: 0;
+  content: "";
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.imagebox {
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-color: #000;
+  border: 7px ridge;
+  height: 50vh;
+  position: relative;
+}
+
+#quote-title {
+  letter-spacing: 10px;
+  margin-bottom: .1em;
+  white-space: nowrap;
+}
+
+.underline {
+  border-color: rgb(0, 0, 0);
+  margin: 0 auto .3em;
+  width: 35%;
+}
+
+.quote-text {
+  margin: 0 auto 1em;
+}
+
+@media (max-width: 600px) {
+  .imagebox {
+    height: 33vh;
+  }
+  #quote-title {
+    letter-spacing: 3px;
+  }
+  .quote-text {
+    font-size: 18px;
+  }
+  .underline {
+    width: 60%;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 992px) {
+  .imagebox {
+    height: 40vh;
+  }
+  #quote-title {
+    letter-spacing: 6px;
+  }
+}
+
+#spinner {
+  margin-top: 20vh;
+}
