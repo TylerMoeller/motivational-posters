@@ -1,84 +1,87 @@
 $(document).ready(function () {
   getPoster();
-  $('#reload').click(getPoster);
+  $('#reload').click(function () {
+    if (!$('#reload').hasClass('disabled')) getPoster();
+  });
 });
 
-// The 'done' class is added to .imagebox and .quote-text at the end of each API call
-// Ensure both API calls are complete, stop the spinner, and present the final poster
-function displayPoster() {
-  if ($('.imagebox').hasClass('done') && $('.quote-text').hasClass('done')) {
-    $('.imagebox, .quote-text').removeClass('done');
-    $('#spinner').addClass('hide');
-    $('.poster').fadeIn(1500).removeClass('hide');
-  }
-}
-
 function getPhoto() {
-  var img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = 'https://source.unsplash.com/category/nature/1280x800?sig=' +
-  (Math.random() * 10000).toFixed(0); // random number at end prevents caching
+  return $.Deferred(function () {
+    var _this = this;
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = 'https://source.unsplash.com/category/nature/1280x800?sig=' +
+              (Math.random() * 10000).toFixed(0); // random number at end prevents caching
 
-  // Mobile browsers hit CORS issues with this code. Use a proxy as a temp workaround
-  if (typeof window.orientation !== 'undefined') img.src = 'https://crossorigin.me/' + img.src;
+    // Mobile browsers hit CORS issues with this code. Use a proxy as a temp workaround
+    if (typeof window.orientation !== 'undefined') img.src = 'https://crossorigin.me/' + img.src;
 
-  // ColorThief library uses <canvas> to get the primary color of the image
-  // brightness formula determines if text will be bright enough on the black background
-  $(img).load(function () {
-    var rgb = new ColorThief().getColor(img),
-      brightness = Math.sqrt((0.299 * Math.pow(rgb[0], 2)) +
-                             (0.587 * Math.pow(rgb[1], 2)) +
-                             (0.114 * Math.pow(rgb[2], 2)));
-    var borderColor = 'rgb(' + rgb + ')',
-      textColor = borderColor;
-    if (brightness < 60) textColor = '#bdbdbd';
+    // ColorThief library uses <canvas> to get the primary color of the image
+    // brightness formula determines if text will be bright enough on the black background
+    $(img).load(function () {
+      var rgb = new ColorThief().getColor(img, 8),
+          borderColor = 'rgb(' + rgb + ')',
+          textColor = borderColor,
+          brightness = Math.sqrt((0.299 * Math.pow(rgb[0], 2)) +
+                                 (0.587 * Math.pow(rgb[1], 2)) +
+                                 (0.114 * Math.pow(rgb[2], 2)));
 
-    $('.imagebox, .underline').css('border-color', borderColor);
-    $('#quote-title').css('color', textColor);
-    $('.imagebox').css('background-image', 'url(' + img.src + ')').addClass('done');
-    displayPoster();
+      if (brightness < 50) textColor = '#bdbdbd';
+      $('#poster-image, #underline').css('border-color', textColor);
+      $('#poster-title').css('color', textColor);
+      $('#poster-image').css('background-image', 'url(' + img.src + ')');
+      _this.resolve();
+    });
   });
 }
 
 // Get a quote from the Forismatic API
 function getQuote() {
-  var url = 'http://api.forismatic.com/api/1.0/?method=getQuote&format=jsonp&lang=en&jsonp=?',
-  titles = [
-    'INTEGRITY',  // Random (cheesy) categories for the "motivational" quotes
-    'MOTIVATION',
-    'POTENTIAL',
-    'TRADITION',
-    'ATTITUDE',
-    'AMBITION',
-    'COMPASSION',
-    'INNOVATION',
-    'ASPIRATION',
-    'VISION'
-  ];
+  return $.Deferred(function () {
+    var _this = this,
+        titles = [
+          'INTEGRITY',  // Random (cheesy) categories for the "motivational" quotes
+          'MOTIVATION',
+          'POTENTIAL',
+          'TRADITION',
+          'ATTITUDE',
+          'AMBITION',
+          'COMPASSION',
+          'INNOVATION',
+          'ASPIRATION',
+          'VISION'
+        ];
 
-  // HTTPS hack...Forismatic doesn't support HTTPS, use a proxy when needed.
-  if (window.location.protocol !== 'http:') url = 'https://crossorigin.me/' + url;
+    // Forismatic doesn't support HTTPS, use a proxy when needed. (hack...)
+    var url = 'http://api.forismatic.com/api/1.0/?method=getQuote&format=jsonp&lang=en&jsonp=?';
+    if (window.location.protocol !== 'http:') url = 'https://crossorigin.me/' + url;
 
-  // Call the Forismatic API to get a random quote
-  $.getJSON(url).done(function (data) {
-    var quoteText = data.quoteText.trim(),
-      quoteAuthor = data.quoteAuthor.trim() || 'Anonymous';
+    // Call the Forismatic API to get a random quote.
+    $.getJSON(url).done(function (data) {
+      var quoteText = data.quoteText.trim(),
+          quoteAuthor = data.quoteAuthor.trim() || 'Anonymous';
 
-    $('#quote-title').html(titles[Math.floor(Math.random() * titles.length)]);
-    $('.quote-text').html('"' + quoteText + '"<br>~ ' + quoteAuthor).addClass('done');
-  }).fail(function (err) {
-    alert('Error, please try again. Error Message: ', err);
-  }).complete(function () {
-    displayPoster();
+      $('#poster-title').html(titles[Math.floor(Math.random() * titles.length)]);
+      $('#poster-text').html('"' + quoteText + '"<br>~ ' + quoteAuthor);
+    }).fail(function (err) {
+      alert('Error, please try again. Error Message: ', err);
+    }).always(function () {
+      _this.resolve();
+    });
   });
 }
 
-// Add a spinner, fade out the poster, and get a new photo + quote
+// Disable the reload button and display a spinner while retrieving the new poster
+// Fade out the poster, get a new one, and fade the new poster back in
 function getPoster() {
-  $('.poster').fadeOut(1000).promise().done(function () {
-    getPhoto();
-    getQuote();
+  $('#reload').addClass('disabled');
+  $('#poster').fadeOut(1000).promise().done(function () {
+    $('#poster').addClass('hide');
     $('#spinner').removeClass('hide');
-    $('.poster').addClass('hide');
+    $.when(getPhoto(), getQuote()).then(function () {
+      $('#spinner').addClass('hide');
+      $('#poster').fadeIn(1500).removeClass('hide');
+      $('#reload').removeClass('disabled');
+    });
   });
 }
