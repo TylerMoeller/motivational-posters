@@ -1,4 +1,4 @@
-#Random Quote Machine
+# Random Quote Machine
 :smile::thought_balloon: A "motivational" poster generator using Unsplash and WikiQuote APIs
 
 https://tylermoeller.github.io/motivational-posters/
